@@ -1,0 +1,29 @@
+Allow 10% frequency variance between non-DP monitors.
+
+Most real-world monitors have a little tolerance to non-quite-right input
+frequencies, so we can take advantage of this for heterogeneous multi-head
+setups.
+
+Kernels prior to 3.6 (I think) did this by accident, and it was useful, so
+this patch reintroduces the "bug" as a feature, in a slightly more limited
+way.
+
+Monitors that do not support the variance should simply display "Input
+frequency out of range", or whatever, these days. In any case, the kernel
+has been doing this for years and I've not heard of fried hardware.
+
+Signed-off-by: Andrew Stubbs <ams@codesourcery.com>
+
+--- linux-3.11.0/drivers/gpu/drm/radeon/atombios_crtc.c.orig	2013-09-20 10:02:18.923042892 +0100
++++ linux-3.11.0/drivers/gpu/drm/radeon/atombios_crtc.c	2013-09-20 09:50:41.091024797 +0100
+@@ -1596,8 +1596,8 @@
+ 			}
+ 			/* for non-DP check the clock */
+ 			test_adjusted_clock = test_radeon_crtc->adjusted_clock;
+-			if ((crtc->mode.clock == test_crtc->mode.clock) &&
+-			    (adjusted_clock == test_adjusted_clock) &&
++			if ((adjusted_clock >= (9*test_adjusted_clock/10)) &&
++			    (test_adjusted_clock >= (9*adjusted_clock/10)) &&
+ 			    (radeon_crtc->ss_enabled == test_radeon_crtc->ss_enabled) &&
+ 			    (test_radeon_crtc->pll_id != ATOM_PPLL_INVALID))
+ 				return test_radeon_crtc->pll_id;
